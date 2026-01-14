@@ -1,26 +1,31 @@
 
-from fastapi import BackgroundTasks
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType, NameEmail
-from pydantic import BaseModel, EmailStr
-from starlette.responses import JSONResponse
+from fastapi_mail import (
+    ConnectionConfig,
+    FastMail,
+    MessageSchema,
+    MessageType,
+    NameEmail
+)
 
+from src.settings import settings
 
 conf = ConnectionConfig(
-    MAIL_USERNAME ="username",
-    MAIL_PASSWORD = "**********",
-    MAIL_FROM = "test@email.com",
-    MAIL_PORT = 465,
-    MAIL_SERVER = "mail server",
-    MAIL_STARTTLS = False,
-    MAIL_SSL_TLS = True,
-    USE_CREDENTIALS = True,
-    VALIDATE_CERTS = True
+    MAIL_USERNAME=settings.mail_conf.username,
+    MAIL_PASSWORD=settings.mail_conf.password,
+    MAIL_FROM=settings.mail_conf.mail_from,
+    MAIL_PORT=settings.mail_conf.port,
+    MAIL_SERVER=settings.mail_conf.server,
+    MAIL_STARTTLS=settings.mail_conf.starttls,
+    MAIL_SSL_TLS=settings.mail_conf.ssl_tls,
+    USE_CREDENTIALS=settings.mail_conf.use_credentials,
+    VALIDATE_CERTS=settings.mail_conf.validate_certs,
 )
 
 
-class MessageManager:
+class EmailManager:
+
     @staticmethod
-    async def send(subject: str, recipients: list[str], body: str):
+    async def send(subject: str, recipients: list[NameEmail], body: str):
         message = MessageSchema(
             subject=subject,
             recipients=recipients,
@@ -29,4 +34,18 @@ class MessageManager:
 
         fm = FastMail(conf)
         await fm.send_message(message)
-        return JSONResponse(status_code=200, content={"message": "email has been sent"})
+
+
+class ConsoleEmail:
+    @staticmethod
+    async def send(subject: str, recipients: list[NameEmail], body: str):
+        print(
+            """
+
+            Subject: {}
+            recipients: {}
+
+            {body}
+
+            """.format(subject, recipients, body)
+        )

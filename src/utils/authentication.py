@@ -11,11 +11,12 @@ from fastapi.security import OAuth2PasswordBearer
 
 from src.utils.database import SessionDep
 from src.internal.users import User
+from src.settings import settings
 
 
-SECRET_KEY = "4843fc4c71f819615787dc7a8a028d550aab28cfd97c187737962f660c3060ce"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 
 class Token(BaseModel):
@@ -112,4 +113,3 @@ async def get_current_active_user(
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
-

@@ -1,5 +1,6 @@
 from celery.app import Celery
 
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+from src.settings import settings
 
-celery_app = Celery(__name__, broker=redis_url, backend=redis_url)
+celery_app = Celery(__name__, broker=settings.redis_url, backend=settings.redis_url)
+celery_app.autodiscover_tasks(["src.tasks"])

@@ -5,15 +5,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY compose/requirements.txt compose/requirements.txt
-COPY compose/local/requirements.txt compose/local/requirements.txt
+COPY requirements /app/requirements
 
-RUN pip install --no-cache-dir --upgrade
-RUN pip install --no-cache-dir -r compose/local/requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade pip && \
+  python -m pip install --no-cache-dir -r /app/requirements/local/requirements.txt
 
+COPY . /app
 
-COPY . .
-
-# EXPOSE 80
-
-# CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "80"]
+# Copy and prepare the startup scripts
+RUN cp /app/compose/local/commands/start-celery /start-celery && \
+  sed -i 's/\r$//g' /start-celery && \
+  chmod +x /start-celery

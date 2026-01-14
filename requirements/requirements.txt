@@ -1,0 +1,10 @@
+fastapi[standard]
+pwdlib[argon2]
+celery[redis]
+fastapi-mail[aioredis]
+fastapi-mail[httpx]
+sqlmodel
+pyjwt
+alembic
+psycopg2-binary
+pydantic-settings

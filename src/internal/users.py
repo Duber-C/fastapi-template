@@ -47,6 +47,11 @@ class CreateRole(SQLModel):
     name: str
 
 
+class RolePublic(SQLModel):
+    id: UUID
+    name: str
+
+
 class BaseUser(SQLModel):
     email: EmailStr
 
@@ -65,6 +70,5 @@ class User(CreateUser, BaseDBModel, table=True):
 
 class UserPublic(BaseUser):
     id: UUID
-    roles: list[UUID] = Field(default=None, foreign_key="UserRoleLink.role_id")
-
+    roles: list[RolePublic] = Field(default_factory=list)
 

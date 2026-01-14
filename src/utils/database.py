@@ -2,12 +2,9 @@ from typing import Annotated, Type
 from fastapi import Depends
 from sqlmodel import create_engine, SQLModel, Session
 
+from src.settings import settings
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
+engine = create_engine(settings.database_url)
 
 
 def create_db_and_tables():
@@ -38,4 +35,3 @@ def update_or_create(model: Type[SQLModel], item: dict):
 
         session.add(db_item)
         session.commit()
-

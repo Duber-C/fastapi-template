@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
 
-  api:
+  api: &api
     build:
       context: ./
       dockerfile: ./compose/local/Dockerfile
@@ -18,5 +18,16 @@ services:
       - ./.envs/local/.db
       - ./.envs/local/.cloud
     ports:
-      - "80:80"
-    command: fastapi run src/main.py --host 0.0.0.0 --port 80
+      - "8000:8000"
+    command: fastapi run src/main.py --host 0.0.0.0 --port 8000
+
+  redis:
+    image: redis:6.2
+
+  worker:
+    <<: *api
+    depends_on:
+      - redis
+      - postgres
+    ports: []
+    command: /start-celery
