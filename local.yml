@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+  api:
+    build:
+      context: ./
+      dockerfile: ./compose/local/Dockerfile
+    image: api
+    depends_on:
+      - postgres
+    volumes:
+      - ./:/app
+    env_file:
+      - ./.envs/local/.vars
+      - ./.envs/local/.db
+      - ./.envs/local/.cloud
+    ports:
+      - "80:80"
+    command: fastapi run src/main.py --host 0.0.0.0 --port 80
