@@ -6,6 +6,9 @@ venv/
 env/
 .env
 .env.*/
+.envs/*
+.envs/
+.envs
 
 .mypy_cache/
 .pytest_cache/
