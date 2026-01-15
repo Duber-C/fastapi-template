@@ -26,6 +26,12 @@ class MailConfig(BaseModel):
     validate_certs: bool = Field(default=True, validation_alias="MAIL_VALIDATE_CERTS")
 
 
+class S3Config(BaseModel):
+    region: str = Field(default="us-east-1", validation_alias="S3_REGION")
+    prefix: str = Field(default="files", validation_alias="S3_PREFIX")
+    bucket: str = Field(default="bucket", validation_alias="S3_BUCKET")
+
+
 class Settings(BaseSettings):
     environment: EnvironmentEnum = Field(
         default=EnvironmentEnum.local,
@@ -51,6 +57,8 @@ class Settings(BaseSettings):
     )
 
     mail_conf: MailConfig = MailConfig()
+
+    s3_conf: S3Config = S3Config()
 
     model_config = SettingsConfigDict(extra="ignore")
 

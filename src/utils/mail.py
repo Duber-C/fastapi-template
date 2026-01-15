@@ -1,4 +1,4 @@
-import asyncio
+from abc import ABC
 from fastapi_mail import (
     ConnectionConfig,
     FastMail,
@@ -7,7 +7,7 @@ from fastapi_mail import (
     NameEmail
 )
 
-from src.settings import EnvironmentEnum, settings, logger
+from src.settings import EnvironmentEnum, settings
 
 
 conf = ConnectionConfig(
@@ -23,7 +23,7 @@ conf = ConnectionConfig(
 )
 
 
-class EmailInterface:
+class EmailInterface(ABC):
     @staticmethod
     async def send(subject: str, recipients: list[NameEmail], body: str):
         ...

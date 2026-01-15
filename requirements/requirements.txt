@@ -8,3 +8,6 @@ pyjwt
 alembic
 psycopg2-binary
 pydantic-settings
+boto3
+python-magic
+python-multipart

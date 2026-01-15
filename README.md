@@ -121,6 +121,19 @@ Makefile commands:
 - If you add routes or change permission names, update the fixtures
   accordingly so access rules stay in sync.
 
+## How to use or secure an endpoint
+Using a protected endpoint:
+- Get a token by posting credentials to `/auth/token`.
+- Send `Authorization: Bearer <access_token>` with the request.
+- Ensure the user has a role whose permissions include the route name.
+
+Securing a new endpoint:
+- Add the route under `src/routes/` and give it a stable route name.
+- Require authentication via the shared dependency used in routes.
+- Add the route name to the appropriate role permission list in
+  `src/fixtures/*.json`.
+- Re-run the app so fixtures load the updated permissions.
+
 ## Celery configuration
 - Celery is configured in `src/utils/celery.py` with Redis as broker/backend.
 - The worker is started by `compose/local/commands/start-celery`.

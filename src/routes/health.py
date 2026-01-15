@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 
-router = APIRouter(prefix='/health', tags=['Account'])
+router = APIRouter(prefix='/health', tags=['Health'])
 
 class Health(BaseModel):
     message: str
