@@ -1,4 +1,4 @@
-
+import asyncio
 from fastapi_mail import (
     ConnectionConfig,
     FastMail,
@@ -7,7 +7,8 @@ from fastapi_mail import (
     NameEmail
 )
 
-from src.settings import settings
+from src.settings import EnvironmentEnum, settings, logger
+
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.mail_conf.username,
@@ -22,8 +23,13 @@ conf = ConnectionConfig(
 )
 
 
-class EmailManager:
+class EmailInterface:
+    @staticmethod
+    async def send(subject: str, recipients: list[NameEmail], body: str):
+        ...
 
+
+class SMTPEmail(EmailInterface):
     @staticmethod
     async def send(subject: str, recipients: list[NameEmail], body: str):
         message = MessageSchema(
@@ -36,16 +42,29 @@ class EmailManager:
         await fm.send_message(message)
 
 
-class ConsoleEmail:
+class ConsoleEmail(EmailInterface):
     @staticmethod
     async def send(subject: str, recipients: list[NameEmail], body: str):
-        print(
-            """
+        mail = """
+            ------ console mail
 
             Subject: {}
             recipients: {}
 
-            {body}
+            {}
 
-            """.format(subject, recipients, body)
-        )
+            ------
+        """.format(subject, recipients, body)
+
+        print(mail)
+
+
+def get_email_sender() -> type[EmailInterface]:
+    if settings.environment == EnvironmentEnum.prod:
+        return SMTPEmail
+
+    return ConsoleEmail
+
+
+email_manager = get_email_sender()
+

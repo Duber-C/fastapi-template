@@ -5,7 +5,7 @@ from sqlmodel import select
 
 from src.internal.registers import CreateRegister, Register
 from src.utils.database import SessionDep
-from src.utils.routes import Selector
+from src.utils.selectors import Selector
 
 
 class RegisterSelector(Selector):

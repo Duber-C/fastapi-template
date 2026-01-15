@@ -1,10 +1,22 @@
-from pydantic import BaseModel, Field
+import logging
+from enum import Enum
+
+from pydantic import BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+logger = logging.getLogger("uvicorn.error")
+
+
+class EnvironmentEnum(str, Enum):
+    local = "local"
+    dev = "dev"
+    prod = "prod"
 
 
 class MailConfig(BaseModel):
     username: str = Field(default="username", validation_alias="MAIL_USERNAME")
-    password: str = Field(default="**********", validation_alias="MAIL_PASSWORD")
+    password: SecretStr = Field(default=SecretStr("***"), validation_alias="MAIL_PASSWORD")
     mail_from: str = Field(default="test@email.com", validation_alias="MAIL_FROM")
     port: int = Field(default=465, validation_alias="MAIL_PORT")
     server: str = Field(default="mail server", validation_alias="MAIL_SERVER")
@@ -15,7 +27,10 @@ class MailConfig(BaseModel):
 
 
 class Settings(BaseSettings):
-    environment: str = Field(default="local", validation_alias="ENV")
+    environment: EnvironmentEnum = Field(
+        default=EnvironmentEnum.local,
+        validation_alias="ENV"
+    )
     database_url: str = Field(
         default="postgresql+psycopg2://postgres:postgres@postgres:5432/postgres",
         validation_alias="DATABASE_URL",

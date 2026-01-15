@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from src.internal.users import PermissionRoleLink
 from src.utils.dependencies import CurrentUser
 from src.utils.database import SessionDep
-from src.utils.routes import Selector
+from src.utils.selectors import Selector
 
 
 class PermissionRoleSelector(Selector):

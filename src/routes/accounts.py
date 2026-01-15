@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query
 
 from src.internal.accounts import Account, CreateAccount
 from src.utils.database import SessionDep
-from src.utils.routes import Selector
+from src.utils.selectors import Selector
 
 
 class AccountSelector(Selector):

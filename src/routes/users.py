@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query, Depends
 from src.utils.authentication import get_current_active_user, get_password_hash
 from src.internal.users import Role, User, UserPublic
 from src.utils.database import SessionDep
-from src.utils.routes import Selector
+from src.utils.selectors import Selector
 
 
 class UserSelector(Selector):

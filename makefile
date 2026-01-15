@@ -11,3 +11,9 @@ build:
 
 test:
 	docker compose -f $(DOCKER_COMPOSE_FILE) run --rm api pytest
+
+mm:
+	alembic revision --autogenerate -m "$(msg)"
+
+m:
+	alembic upgrade head

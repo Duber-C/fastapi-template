@@ -4,6 +4,7 @@ from sqlmodel import create_engine, SQLModel, Session
 
 from src.settings import settings
 
+
 engine = create_engine(settings.database_url)
 
 

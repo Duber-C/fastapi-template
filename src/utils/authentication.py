@@ -64,6 +64,14 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 def has_permission(request: Request, user: User) -> bool:
+    """
+    Check whether the user has permission to access the requested route.
+
+    The permission check compares the FastAPI route name (the endpoint
+    function name, e.g. ``get_users``) against the permission names
+    assigned to any of the user's roles.
+    """
+
     route = request.scope.get('route')
     if not route:
         return False

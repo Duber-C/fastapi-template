@@ -3,6 +3,7 @@ import json
 
 from src.internal.users import Permission, PermissionRoleLink, Role
 from src.utils.database import update_or_create
+from src.settings import logger
 
 
 fixture_mapping = {
@@ -21,22 +22,21 @@ def load_fixtures():
     for f in files:
         model = fixture_mapping.get(f)
         if not model:
-            print("Mapping does no exits {}".format(f))
+            logger.warning("Mapping does not exist for %s", f)
             continue
 
         with open(basepath + f, 'r') as file:
             content = file.read()
             try:
                 items = json.loads(content)
-            except Exception as e:
-                print("Failed loding json file {} with {}".format(f, e))
+            except Exception:
+                logger.exception("Failed loading json file %s", f)
                 continue
 
         for item in items:
             try:
                 update_or_create(model, item)
-            except Exception as e:
-                print("Failed update or create item {} error {}".format(item, e))
+            except Exception:
+                logger.exception("Failed update or create item %s", item)
 
-        print("Fixture uploaded! -> {}".format(f))
-
+        logger.info("\U0001F4AA Fixture uploaded! -> %s", f)

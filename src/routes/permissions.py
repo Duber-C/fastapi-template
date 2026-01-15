@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from src.internal.users import CreatePermission, Permission, PermissionPublic
 from src.utils.dependencies import CurrentUser
 from src.utils.database import SessionDep
-from src.utils.routes import Selector
+from src.utils.selectors import Selector
 
 
 class PermissionSelector(Selector):

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from src.utils.database import SessionDep
-from src.utils.routes import Selector
+from src.utils.selectors import Selector
 from src.internal.users import CreateRole, Role
 
 

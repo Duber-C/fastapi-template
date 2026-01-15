@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from src.utils.load_fixtures import load_fixtures
 from src.utils.database import create_db_and_tables
 from src.routes import (
+    health,
     permission_roles,
     users,
     accounts,
@@ -25,6 +26,7 @@ async def lifespand(app: FastAPI):
 
 app = FastAPI(lifespan=lifespand)
 
+app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(permissions.router)
