@@ -47,8 +47,8 @@ class FileInterface(ABC):
 
 
 class StaticFile(FileInterface):
-    base_dir: str = "files"
-    base_url: str = "/files"
+    base_dir: str = "static"
+    base_url: str = "/static"
 
     async def save(self) -> str:
         self.validate()

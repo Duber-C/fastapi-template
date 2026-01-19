@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 
-celery -A src.utils.celery:celery_app worker -l info -O fair
+celery -A src.core.celery:celery_app worker -l info -O fair

@@ -3,10 +3,15 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, Depends
 
-from src.utils.authentication import get_current_active_user, get_password_hash
-from src.internal.users import Role, User, UserPublic
-from src.utils.database import SessionDep
-from src.utils.selectors import Selector
+from src.core.authentication import (
+    get_password_hash,
+    require_role,
+)
+from src.core.database import SessionDep
+from src.core.dependencies import CurrentAdminUser, CurrentUser
+from src.core.selectors import Selector
+from src.modules.users.enums import RoleEnum
+from src.modules.users.models.users import User, UserPublic
 
 
 class UserSelector(Selector):
@@ -16,10 +21,7 @@ class UserSelector(Selector):
     def create(cls, item: Any, session: SessionDep):
         db_user = User.model_validate(item)
         db_user.password = get_password_hash(db_user.password)
-
-        role = session.get(Role, UUID("ddfbdace-0621-44a2-8617-97b2ebdef2aa"))
-        if role:
-            db_user.roles = [role]
+        db_user.roles = [RoleEnum.user]
 
         session.add(db_user)
         session.commit()
@@ -41,7 +43,7 @@ def read_users(
 
 @router.get("/me/", response_model=User)
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_role('user'))],
 ):
     return current_user
 
@@ -52,10 +54,10 @@ def get_user(id: UUID, session: SessionDep):
 
 
 @router.patch("/{id}", response_model=UserPublic)
-def update_user(id: UUID, user: UserPublic, session: SessionDep):
+def update_user(id: UUID, user: UserPublic, session: SessionDep, current_user: CurrentUser):
     return UserSelector.update(id, user, session)
 
 
 @router.delete("/{id}")
-def delete_user(id: UUID, session: SessionDep):
+def delete_user(id: UUID, session: SessionDep, current_user: CurrentAdminUser):
     return UserSelector.delete(id, session)

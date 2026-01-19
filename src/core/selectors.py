@@ -4,7 +4,7 @@ from sqlmodel import SQLModel, select
 
 from fastapi import HTTPException, Query
 
-from src.utils.database import SessionDep
+from src.core.database import SessionDep
 
 
 class Selector:

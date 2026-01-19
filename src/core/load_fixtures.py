@@ -1,30 +1,24 @@
 import os
 import json
 
-from src.internal.users import Permission, PermissionRoleLink, Role
-from src.utils.database import update_or_create
+from sqlmodel import SQLModel
+
+from src.modules.users.models.users import Permission
+from src.core.database import update_or_create
 from src.settings import logger
 
 
-fixture_mapping = {
-    'permissions.json': Permission,
-    'roles.json': Role,
-    'permission_roles.json': PermissionRoleLink
+fixture_mapping: dict[str, type[SQLModel]] = {
+    '/src/modules/users/fixtures/permissions.json': Permission,
 }
 
 
 def load_fixtures():
     cwd = os.getcwd()
 
-    basepath = cwd + "/src/fixtures/"
-    files = os.listdir(basepath)
+    basepath = cwd
 
-    for f in files:
-        model = fixture_mapping.get(f)
-        if not model:
-            logger.warning("Mapping does not exist for %s", f)
-            continue
-
+    for f, model in fixture_mapping.items():
         with open(basepath + f, 'r') as file:
             content = file.read()
             try:
@@ -40,3 +34,10 @@ def load_fixtures():
                 logger.exception("Failed update or create item %s", item)
 
         logger.info("\U0001F4AA Fixture uploaded! -> %s", f)
+
+
+if __name__ == "__main__":
+    import logging
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    load_fixtures()

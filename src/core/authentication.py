@@ -1,7 +1,7 @@
 from uuid import UUID
 import jwt
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Callable
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 from sqlmodel import select
@@ -9,8 +9,8 @@ from sqlmodel import select
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 
-from src.utils.database import SessionDep
-from src.internal.users import User
+from src.core.database import SessionDep
+from src.modules.users.models.users import User
 from src.settings import settings
 
 
@@ -29,7 +29,7 @@ class TokenData(BaseModel):
 
 
 password_hash = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
 
 
 def verify_password(plain_password, hashed_password):
@@ -63,7 +63,18 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def has_permission(request: Request, user: User) -> bool:
+def has_role_permission(roles: tuple[str, ...], user: User) -> bool:
+    if not roles or not user:
+        return False
+
+    for role in user.roles:
+        if role in roles:
+            return True
+
+    return False
+
+
+def has_specific_permission(request: Request, user: User) -> bool:
     """
     Check whether the user has permission to access the requested route.
 
@@ -73,7 +84,7 @@ def has_permission(request: Request, user: User) -> bool:
     """
 
     route = request.scope.get('route')
-    if not route:
+    if not route or not user:
         return False
 
     has_perm = False
@@ -88,7 +99,6 @@ def has_permission(request: Request, user: User) -> bool:
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: SessionDep,
-    request: Request
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -109,9 +119,6 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
 
-    if not has_permission(request, user):
-        raise HTTPException(status_code=401, detail="Unauthorized user")
-
     return user
 
 
@@ -120,4 +127,26 @@ async def get_current_active_user(
 ):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
+
     return current_user
+
+
+def require_role(*allowed_roles: str) -> Callable:
+    """Ensure the authenticated profile has at least one of the allowed roles."""
+
+    async def _enforce_permissions(
+        request: Request,
+        current_user: User = Depends(get_current_active_user),
+    ) -> User:
+        if has_role_permission(allowed_roles, current_user):
+            return current_user
+
+        if has_specific_permission(request, current_user):
+            return current_user
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user does not have a role that is authorized to access this resource.",
+        )
+
+    return _enforce_permissions

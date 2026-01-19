@@ -19,7 +19,7 @@ services:
       - ./.envs/local/.cloud
     ports:
       - "8000:8000"
-    command: fastapi run src/main.py --host 0.0.0.0 --port 8000
+    command: fastapi run src/main.py --host 0.0.0.0 --port 8000 --reload
 
   redis:
     image: redis:6.2
