@@ -12,14 +12,14 @@ from src.core.authentication import (
 )
 from src.core.database import SessionDep
 from src.modules.users.models.users import CreateUser, UserPublic
-from src.modules.users.routes.users import UserSelector
+from src.modules.users.selectors import UserSelector
 
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
 
 
-@router.post("/token")
-async def login_for_access_token(
+@router.post("/login")
+async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: SessionDep
 ) -> Token:
@@ -42,6 +42,6 @@ async def login_for_access_token(
 
 
 @router.post("/signup", response_model=UserPublic)
-def create_user(user: CreateUser, session: SessionDep):
+def signup(user: CreateUser, session: SessionDep):
     return UserSelector.create(user, session)
 

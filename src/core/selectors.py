@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 from sqlmodel import SQLModel, select
+from sqlalchemy import ARRAY
 
 from fastapi import HTTPException, Query
 
@@ -60,3 +61,29 @@ class Selector:
 
         return {"ok": True}
 
+    @classmethod
+    def filter(
+        cls,
+        session: SessionDep,
+        field: str,
+        value: Any,
+        offset: int = 0,
+        limit: Annotated[int, Query(le=100)] = 100,
+    ):
+        column = getattr(cls.model, field, None)
+        if column is None:
+            raise HTTPException(status_code=400, detail="invalid filter field")
+
+        if isinstance(column.type, ARRAY):
+            if isinstance(value, (list, tuple, set)):
+                filter_expr = column.contains(list(value))
+            else:
+                filter_expr = column.any(value)
+        else:
+            filter_expr = column == value
+
+        items = (
+            session.exec(select(cls.model).where(filter_expr).offset(offset).limit(limit))
+            .all()
+        )
+        return items

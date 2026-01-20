@@ -4,13 +4,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated, Callable
 from pwdlib import PasswordHash
 from pydantic import BaseModel
-from sqlmodel import select
+from sqlmodel import Session, select
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 
-from src.core.database import SessionDep
+from src.core.database import SessionDep, engine
 from src.modules.users.models.users import User
+from src.modules.users.enums import RoleEnum
 from src.settings import settings
 
 
@@ -29,7 +30,7 @@ class TokenData(BaseModel):
 
 
 password_hash = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/login")
 
 
 def verify_password(plain_password, hashed_password):
@@ -88,10 +89,18 @@ def has_specific_permission(request: Request, user: User) -> bool:
         return False
 
     has_perm = False
-    for i in user.roles:
-        for j in i.permissions:
-            if route.name == j.name:
-                has_perm = True
+
+    from src.modules.users.selectors import PermissionSelector
+
+    with Session(engine) as session:
+        for role in user.roles:
+            permissions = PermissionSelector.filter(
+                session=session, field="roles", value=role
+            )
+            print(permissions)
+            for j in permissions:
+                if route.name == j.name:
+                    has_perm = True
 
     return has_perm
 
@@ -118,6 +127,12 @@ async def get_current_user(
     user = session.get(User, UUID(token_data.user_id))
     if user is None:
         raise credentials_exception
+
+    if user.roles:
+        user.roles = [
+            role if isinstance(role, RoleEnum) else RoleEnum(role)
+            for role in user.roles
+        ]
 
     return user
 

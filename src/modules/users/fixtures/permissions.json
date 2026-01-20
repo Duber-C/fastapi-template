@@ -1,14 +1,41 @@
 [
 	{
 		"id": "9cc1af72-2019-4186-8439-3a5d52ff3f45",
-		"name": "read_permissions"
+		"name": "read_users",
+		"roles": [
+			"superadmin"
+		]
 	},
 	{
 		"id": "8ca20df5-e0b0-47c1-b5e4-057c52dab947",
-		"name": "create_permissions"
+		"name": "delete_user",
+		"roles": [
+			"superadmin"
+		]
 	},
 	{
 		"id": "4b5a7967-13e8-45a0-8441-100e71a4362c",
-		"name": "create_permission_role"
+		"name": "get_user",
+		"roles": [
+			"superadmin"
+		]
+	},
+	{
+		"id": "9130fcaf-6de6-4456-8042-36591b3a483e",
+		"name": "read_users_me",
+		"roles": [
+			"user",
+			"admin",
+			"superadmin"
+		]
+	},
+	{
+		"id": "77b470be-69bf-4230-80f0-abce8c61aeec",
+		"name": "update_user",
+		"roles": [
+			"user",
+			"admin",
+			"superadmin"
+		]
 	}
 ]

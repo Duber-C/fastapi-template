@@ -1,4 +1,4 @@
-# FastAPI Example
+# FastAPI Template
 
 ## Stack
 - FastAPI for the API layer.
@@ -10,12 +10,12 @@
 - Docker and Docker Compose for local services.
 
 ## Repo structure
-- `src/` application code (routes, internal models, utils, tasks).
-- `src/routes/` FastAPI routers and endpoints.
-- `src/internal/` SQLModel models and domain logic.
-- `src/utils/` shared helpers (auth, database, mail, celery, fixtures).
+- `src/` application code.
+- `src/core/` shared helpers (auth, database, dependencies, fixtures, selectors).
+- `src/modules/` feature modules (auth, users).
 - `src/tasks/` Celery tasks (autodiscovered).
-- `src/fixtures/` JSON fixtures
+- `src/tests/` app tests.
+- `src/modules/users/fixtures/` JSON fixtures (permissions).
 - `alembic/` migration scripts and environment.
 - `compose/local/` Dockerfile and startup scripts.
 - `local.yml` Docker Compose file for local dev.
@@ -64,6 +64,12 @@ REDIS_URL=redis://redis:6379
 SECRET_KEY=replace-me
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+# Optional: used by `make admin` to create/update an admin user.
+ADMIN_EMAIL=admin@example.com
+# Leave empty in versioned env files; provide at runtime.
+ADMIN_PASSWORD=
+# Comma-separated roles; defaults to superadmin in the CLI if omitted.
+ADMIN_ROLES=superadmin
 MAIL_USERNAME=your-user
 MAIL_PASSWORD=your-pass
 MAIL_FROM=your-email@example.com
@@ -92,7 +98,7 @@ make up
 ```
 
 ## Tests
-- Keep all tests under `tests/`.
+- Keep all tests under `src/tests/`.
 - Run the test suite via the Makefile:
 
 ```bash
@@ -101,46 +107,56 @@ make test
 
 ## Database configuration and migrations (Alembic + Makefile)
 - Runtime DB connection is created from `settings.database_url`
-  in `src/utils/database.py`.
+  in `src/core/database.py`.
 - The app calls `create_db_and_tables()` on startup to create tables.
 - Alembic is configured in `alembic/env.py` and uses `settings.database_url`,
   so it targets the same Postgres instance as the app.
 - Migrations live in `alembic/versions/`.
+- User emails are unique (see latest migration).
 
 Makefile commands:
 - `make mm msg="your message"` generates a revision (autogenerate).
 - `make m` applies migrations (`alembic upgrade head`).
 
 ## Authentication, authorization, roles, and permissions
-- Authentication uses OAuth2 password flow (`/auth/token`) and JWTs.
-- Passwords are hashed with `pwdlib` in `src/utils/authentication.py`.
-- Authorization is permission-based: each request checks if the current
-  route name matches a permission assigned to one of the user's roles.
-- Role/permission fixtures live in `src/fixtures/*.json` and are loaded
-  on startup by `src/utils/load_fixtures.py`.
-- If you add routes or change permission names, update the fixtures
-  accordingly so access rules stay in sync.
+- Authentication uses OAuth2 password flow (`/v1/auth/login`) and JWTs.
+- Passwords are hashed with `pwdlib` in `src/core/authentication.py`.
+- Roles are `user`, `admin`, `superadmin` (see `src/modules/users/enums.py`).
+- Authorization is role-then-permission based:
+  `require_role(...)` checks explicit roles first, then permission fixtures.
+- Permissions map route names to roles in
+  `src/modules/users/fixtures/permissions.json`.
+- Fixtures are loaded with `src/core/load_fixtures.py` (manual run).
 
 ## How to use or secure an endpoint
 Using a protected endpoint:
-- Get a token by posting credentials to `/auth/token`.
+- Get a token by posting credentials to `/v1/auth/login`.
 - Send `Authorization: Bearer <access_token>` with the request.
 - Ensure the user has a role whose permissions include the route name.
 
 Securing a new endpoint:
-- Add the route under `src/routes/` and give it a stable route name.
+- Add the route under `src/modules/` and give it a stable route name.
 - Require authentication via the shared dependency used in routes.
-- Add the route name to the appropriate role permission list in
-  `src/fixtures/*.json`.
-- Re-run the app so fixtures load the updated permissions.
+- Add the route name to the appropriate role list in
+  `src/modules/users/fixtures/permissions.json`.
+- Run `python -m src.core.load_fixtures` to refresh permissions.
+
+## Auth and users endpoints
+- `POST /v1/auth/login` issues a JWT.
+- `POST /v1/auth/signup` creates a user (default role: `user`).
+- `GET /v1/users` lists users (superadmin).
+- `GET /v1/users/me` returns the current user.
+- `POST /v1/users/{id}` fetches a user by id (superadmin).
+- `PATCH /v1/users/{id}` updates a user.
+- `DELETE /v1/users/{id}` deletes a user (superadmin).
 
 ## Celery configuration
-- Celery is configured in `src/utils/celery.py` with Redis as broker/backend.
+- Celery is configured in `src/core/celery.py` with Redis as broker/backend.
 - The worker is started by `compose/local/commands/start-celery`.
 - Tasks are autodiscovered from `src/tasks`, and all tasks must live under
   the `tasks/` folder.
 
 ## Email configuration
 - Email settings come from `MAIL_*` env vars in `src/settings.py`.
-- `src/utils/mail.py` uses fastapi-mail with SMTP in `prod`,
+- `src/core/mail.py` uses fastapi-mail with SMTP in `prod`,
   and a console sender in other environments.

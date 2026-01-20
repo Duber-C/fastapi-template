@@ -8,7 +8,10 @@ from src.modules.users.enums import RoleEnum
 
 class Permission(BaseDBModel, table=True):
     name: str
-    roles: list[RoleEnum] = Field(default=RoleEnum.superadmin, sa_type=ARRAY(String))
+    roles: list[RoleEnum] = Field(
+        default_factory=lambda: [RoleEnum.superadmin],
+        sa_type=ARRAY(String),
+    )
 
 
 class PermissionPublic(SQLModel):
@@ -19,20 +22,22 @@ class CreatePermission(SQLModel):
     name: str
 
 
-class BaseUser(SQLModel):
+class CreateUser(SQLModel):
     email: EmailStr
-
-
-class CreateUser(BaseUser):
     password: str
 
 
-class User(CreateUser, BaseDBModel, table=True):
-    roles: list[RoleEnum] = Field(default=RoleEnum.user, sa_type=ARRAY(String))
+class User(BaseDBModel, table=True):
+    email: EmailStr = Field(unique=True)
+    password: str
+    roles: list[RoleEnum] = Field(
+        default_factory=lambda: [RoleEnum.user],
+        sa_type=ARRAY(String),
+    )
     disabled: bool = Field(default=False)
 
 
-class UserPublic(BaseUser):
+class UserPublic(SQLModel):
     id: UUID
-    # roles: list[RoleEnum]
-
+    email: EmailStr
+    roles: list[str]

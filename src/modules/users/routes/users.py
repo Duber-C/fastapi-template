@@ -1,32 +1,12 @@
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query
 
-from src.core.authentication import (
-    get_password_hash,
-    require_role,
-)
 from src.core.database import SessionDep
-from src.core.dependencies import CurrentAdminUser, CurrentUser
-from src.core.selectors import Selector
-from src.modules.users.enums import RoleEnum
+from src.core.dependencies import CurrentSuperAdminUser, CurrentUser
 from src.modules.users.models.users import User, UserPublic
-
-
-class UserSelector(Selector):
-    model = User
-
-    @classmethod
-    def create(cls, item: Any, session: SessionDep):
-        db_user = User.model_validate(item)
-        db_user.password = get_password_hash(db_user.password)
-        db_user.roles = [RoleEnum.user]
-
-        session.add(db_user)
-        session.commit()
-        session.refresh(db_user)
-        return db_user
+from src.modules.users.selectors import UserSelector
 
 
 router = APIRouter(prefix='/users', tags=['User'])
@@ -35,6 +15,7 @@ router = APIRouter(prefix='/users', tags=['User'])
 @router.get("/", response_model=list[UserPublic])
 def read_users(
     session: SessionDep,
+    current_user: CurrentSuperAdminUser,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
 ):
@@ -43,13 +24,13 @@ def read_users(
 
 @router.get("/me/", response_model=User)
 async def read_users_me(
-    current_user: Annotated[User, Depends(require_role('user'))],
+    current_user: CurrentUser
 ):
     return current_user
 
 
 @router.post("/{id}", response_model=UserPublic)
-def get_user(id: UUID, session: SessionDep):
+def get_user(id: UUID, session: SessionDep, current_user: CurrentSuperAdminUser):
     return UserSelector.get(id, session)
 
 
@@ -59,5 +40,5 @@ def update_user(id: UUID, user: UserPublic, session: SessionDep, current_user: C
 
 
 @router.delete("/{id}")
-def delete_user(id: UUID, session: SessionDep, current_user: CurrentAdminUser):
+def delete_user(id: UUID, session: SessionDep, current_user: CurrentSuperAdminUser):
     return UserSelector.delete(id, session)

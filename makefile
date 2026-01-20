@@ -15,6 +15,12 @@ test:
 load-fixtures:
 	docker compose -f $(DOCKER_COMPOSE_FILE) run --rm api python -m src.core.load_fixtures
 
+admin:
+	docker compose -f $(DOCKER_COMPOSE_FILE) run --rm api python -m src.core.create_admin
+
+admin-console:
+	docker compose -f $(DOCKER_COMPOSE_FILE) run --rm api python -m src.core.create_admin -c
+
 update-environment:
 	pip install -r ./requirements/requirements.txt
 
